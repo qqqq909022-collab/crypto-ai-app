@@ -135,7 +135,8 @@
   .detail-chg { font-family: var(--font-display); font-size: 14px; }
 
   .chart-wrap { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
-  #mini-chart { width: 100%; height: 160px; }
+  #mini-chart { width: 100%; height: 200px; }
+  .chart-src { font-family: var(--font-display); font-size: 9px; color: var(--text-faint); text-align: right; margin-top: 6px; }
   .tf-row { display: flex; gap: 6px; margin-top: 12px; }
   .tf-pill {
     flex: 1; text-align: center; padding: 7px 0; border-radius: 8px;
@@ -296,6 +297,7 @@
 
   <div class="chart-wrap">
     <canvas id="mini-chart"></canvas>
+    <div class="chart-src" id="chart-src">載入中...</div>
     <div class="tf-row" id="tf-row">
       <div class="tf-pill" data-d="1">24H</div>
       <div class="tf-pill active" data-d="7">7D</div>
