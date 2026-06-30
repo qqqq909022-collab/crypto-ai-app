@@ -37,7 +37,7 @@ let coins = JSON.parse(JSON.stringify(SNAPSHOT));
 let globalStats = { ...GLOBAL_SNAPSHOT };
 let dataIsLive = false;
 let currentDetailId = 'bitcoin';
-let currentTF = 7;
+let currentTF = '1h';
 
 function loadState(key, fallback) {
   try {
@@ -167,9 +167,11 @@ function openDetail(id) {
 }
 
 // ============ FALLBACK PSEUDO-CANDLE GENERATION (offline, deterministic from price) ============
-function generateSeries(c, days) {
-  const points = days === 1 ? 24 : days === 7 ? 42 : days === 30 ? 60 : 90;
-  const totalChange = days === 1 ? c.ch24 : days === 7 ? c.ch7 : days === 30 ? c.ch7*1.8 : c.ch7*3.2;
+function generateSeries(c, interval) {
+  const pointsMap = { '15m':60, '1h':60, '4h':60, '1d':60 };
+  const volMap = { '15m':0.15, '1h':0.4, '4h':1.0, '1d':2.5 }; // total % swing scale across the window
+  const points = pointsMap[interval] || 60;
+  const totalChange = (c.ch24 || 0) * (volMap[interval] || 0.4);
   const startPrice = c.price / (1 + totalChange/100);
   let seed = c.sym.charCodeAt(0) * 7 + c.sym.charCodeAt(1) * 13;
   function rand() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
@@ -178,33 +180,51 @@ function generateSeries(c, days) {
   for (let i=0;i<points;i++) {
     const progress = i/(points-1);
     const target = startPrice + (c.price - startPrice) * progress;
-    const noise = (rand()-0.5) * Math.abs(c.price)*0.015;
+    const noise = (rand()-0.5) * Math.abs(c.price)*0.01;
     const open = p;
     p = target + noise;
     const close = p;
-    const high = Math.max(open,close) + Math.abs(rand())*Math.abs(c.price)*0.004;
-    const low = Math.min(open,close) - Math.abs(rand())*Math.abs(c.price)*0.004;
+    const high = Math.max(open,close) + Math.abs(rand())*Math.abs(c.price)*0.003;
+    const low = Math.min(open,close) - Math.abs(rand())*Math.abs(c.price)*0.003;
     candles.push({ open, high, low, close });
   }
   candles[candles.length-1].close = c.price;
   return candles;
 }
 
-// ============ REAL OHLC FETCH (CoinGecko) ============
-const ohlcCache = {};
-async function fetchRealOHLC(coinId, days) {
-  const cacheKey = `${coinId}-${days}`;
-  if (ohlcCache[cacheKey]) return ohlcCache[cacheKey];
+// ============ BINANCE SYMBOL MAP ============
+const BINANCE_SYMBOL = {
+  bitcoin:'BTCUSDT', ethereum:'ETHUSDT', binancecoin:'BNBUSDT', ripple:'XRPUSDT',
+  solana:'SOLUSDT', dogecoin:'DOGEUSDT', tron:'TRXUSDT', cardano:'ADAUSDT',
+  polkadot:'DOTUSDT', 'avalanche-2':'AVAXUSDT', chainlink:'LINKUSDT', litecoin:'LTCUSDT',
+  'shiba-inu':'SHIBUSDT', uniswap:'UNIUSDT', near:'NEARUSDT', aptos:'APTUSDT',
+  arbitrum:'ARBUSDT', optimism:'OPUSDT', sui:'SUIUSDT', stellar:'XLMUSDT',
+};
+
+// ============ REAL K-LINE FETCH (Binance) ============
+const klineCache = {};
+async function fetchRealOHLC(coinId, interval) {
+  const symbol = BINANCE_SYMBOL[coinId];
+  if (!symbol) return null;
+  const cacheKey = `${symbol}-${interval}`;
+  if (klineCache[cacheKey]) return klineCache[cacheKey];
   const controller = new AbortController();
   const timeout = setTimeout(()=>controller.abort(), 6000);
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`, { signal: controller.signal });
+    const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=80`, { signal: controller.signal });
     clearTimeout(timeout);
     if (!res.ok) throw new Error('bad response');
     const data = await res.json();
     if (!Array.isArray(data) || data.length < 3) throw new Error('insufficient data');
-    const candles = data.map(d => ({ time: d[0], open: d[1], high: d[2], low: d[3], close: d[4] }));
-    ohlcCache[cacheKey] = candles;
+    // Binance kline format: [openTime, open, high, low, close, volume, closeTime, ...]
+    const candles = data.map(k => ({
+      time: k[0],
+      open: parseFloat(k[1]),
+      high: parseFloat(k[2]),
+      low: parseFloat(k[3]),
+      close: parseFloat(k[4]),
+    }));
+    klineCache[cacheKey] = candles;
     return candles;
   } catch(e) {
     return null;
@@ -319,17 +339,16 @@ function renderDetail() {
 
 async function renderChartAndIndicators() {
   const c = getCoin(currentDetailId);
-  const tfMap = { 1:1, 7:7, 30:30, 90:90 };
-  const days = tfMap[currentTF] || 7;
+  const interval = currentTF;
 
   // show loading state briefly
   const srcTag = document.getElementById('chart-src');
   if (srcTag) srcTag.textContent = '載入中...';
 
-  let candles = await fetchRealOHLC(c.id, days);
+  let candles = await fetchRealOHLC(c.id, interval);
   let isReal = true;
   if (!candles || candles.length < 5) {
-    candles = generateSeries(c, currentTF);
+    candles = generateSeries(c, interval);
     isReal = false;
   }
 
@@ -387,7 +406,7 @@ if (tfRowEl) {
     if (!pill) return;
     document.querySelectorAll('.tf-pill').forEach(p=>p.classList.remove('active'));
     pill.classList.add('active');
-    currentTF = parseInt(pill.dataset.d);
+    currentTF = pill.dataset.tf;
     renderChartAndIndicators();
   });
 }
