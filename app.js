@@ -231,6 +231,142 @@ async function fetchRealOHLC(coinId, interval) {
   }
 }
 
+// ============ OPEN INTEREST + LONG/SHORT RATIO (Binance Futures) ============
+function fmtOI(n) {
+  if (n == null) return '--';
+  if (n >= 1e9) return (n/1e9).toFixed(2)+'B';
+  if (n >= 1e6) return (n/1e6).toFixed(2)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toFixed(0);
+}
+
+async function fetchOpenInterestHist(symbol, period='1h') {
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 6000);
+  try {
+    const res = await fetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${symbol}&period=${period}&limit=30`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error('bad response');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length < 2) throw new Error('insufficient data');
+    return data.map(d => ({ time: d.timestamp, oi: parseFloat(d.sumOpenInterest), oiValue: parseFloat(d.sumOpenInterestValue) }));
+  } catch(e) {
+    return null;
+  }
+}
+
+async function fetchLongShortRatioHist(symbol, period='1h') {
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 6000);
+  try {
+    const res = await fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${symbol}&period=${period}&limit=30`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error('bad response');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length < 2) throw new Error('insufficient data');
+    return data.map(d => ({ time: d.timestamp, ratio: parseFloat(d.longShortRatio), longAcct: parseFloat(d.longAccount), shortAcct: parseFloat(d.shortAccount) }));
+  } catch(e) {
+    return null;
+  }
+}
+
+// Interpret OI trend + long/short ratio trend into a build/unwind verdict
+function interpretPositioning(oiHist, lsrHist) {
+  if (!oiHist || !lsrHist || oiHist.length < 2 || lsrHist.length < 2) return null;
+
+  const oiFirst = oiHist[0].oi, oiLast = oiHist[oiHist.length-1].oi;
+  const oiChgPct = oiFirst ? ((oiLast - oiFirst) / oiFirst) * 100 : 0;
+
+  const lsrFirst = lsrHist[0].ratio, lsrLast = lsrHist[lsrHist.length-1].ratio;
+  const lsrChgPct = lsrFirst ? ((lsrLast - lsrFirst) / lsrFirst) * 100 : 0;
+
+  const oiRising = oiChgPct > 1.5;
+  const oiFalling = oiChgPct < -1.5;
+  const lsrRising = lsrChgPct > 2; // more long-leaning
+  const lsrFalling = lsrChgPct < -2; // more short-leaning
+
+  let verdict = 'FLAT', label = '— 持倉穩定', why;
+
+  if (oiRising && lsrRising) {
+    verdict = 'BUILD_LONG'; label = '✦ 多頭建倉中';
+    why = `未平倉量上升 ${oiChgPct.toFixed(1)}%，且多空比走升 ${lsrChgPct.toFixed(1)}%，顯示新資金偏向做多，多頭部位持續增加。`;
+  } else if (oiRising && lsrFalling) {
+    verdict = 'BUILD_SHORT'; label = '✦ 空頭建倉中';
+    why = `未平倉量上升 ${oiChgPct.toFixed(1)}%，但多空比下滑 ${Math.abs(lsrChgPct).toFixed(1)}%，顯示新資金偏向做空，空頭部位持續增加。`;
+  } else if (oiFalling) {
+    verdict = 'UNWIND'; label = '— 部位平倉中';
+    why = `未平倉量下降 ${Math.abs(oiChgPct).toFixed(1)}%，顯示市場參與者正在減倉、了結部位，留意行情可能伴隨較大波動。`;
+  } else {
+    why = `未平倉量變化 ${oiChgPct>=0?'+':''}${oiChgPct.toFixed(1)}%，多空比變化 ${lsrChgPct>=0?'+':''}${lsrChgPct.toFixed(1)}%，目前持倉結構相對穩定，無明顯建倉或平倉跡象。`;
+  }
+
+  return { verdict, label, why, oiChgPct, lsrChgPct, oiLast, lsrLast, longAcct: lsrHist[lsrHist.length-1].longAcct, shortAcct: lsrHist[lsrHist.length-1].shortAcct };
+}
+
+async function renderPositioningData(coinId) {
+  const symbol = BINANCE_SYMBOL[coinId];
+  const banner = document.getElementById('oi-banner');
+  const verdictEl = document.getElementById('oi-verdict');
+  const whyEl = document.getElementById('oi-why');
+
+  if (!symbol) {
+    banner.className = 'oi-banner FLAT';
+    verdictEl.textContent = '— 無合約數據';
+    whyEl.textContent = '此幣種目前無幣安合約市場數據。';
+    return;
+  }
+
+  verdictEl.textContent = '— 載入中';
+  whyEl.textContent = '正在讀取合約數據...';
+
+  const [oiHist, lsrHist] = await Promise.all([
+    fetchOpenInterestHist(symbol, '1h'),
+    fetchLongShortRatioHist(symbol, '1h'),
+  ]);
+
+  // bail if user navigated to a different coin while this was loading
+  if (BINANCE_SYMBOL[currentDetailId] !== symbol) return;
+
+  const result = interpretPositioning(oiHist, lsrHist);
+
+  if (!result) {
+    banner.className = 'oi-banner FLAT';
+    verdictEl.textContent = '— 無法取得合約數據';
+    whyEl.textContent = '合約數據暫時無法連線，請稍後再試。';
+    document.getElementById('ind-oi').textContent = '--';
+    document.getElementById('ind-oi-chg').textContent = '--';
+    document.getElementById('ind-lsr').textContent = '--';
+    document.getElementById('ind-lsr-chg').textContent = '--';
+    return;
+  }
+
+  banner.className = 'oi-banner ' + result.verdict;
+  verdictEl.textContent = result.label;
+  whyEl.textContent = result.why;
+
+  document.getElementById('ind-oi').textContent = fmtOI(result.oiLast);
+  document.getElementById('ind-oi-cap').textContent = symbol + ' 永續合約';
+
+  const oiChgEl = document.getElementById('ind-oi-chg');
+  oiChgEl.textContent = (result.oiChgPct>=0?'+':'') + result.oiChgPct.toFixed(2) + '%';
+  oiChgEl.className = 'ind-num ' + (result.oiChgPct>1.5?'up':result.oiChgPct<-1.5?'dn':'neu');
+  document.getElementById('ind-oi-chg-cap').textContent = result.oiChgPct>1.5 ? '未平倉量增加' : result.oiChgPct<-1.5 ? '未平倉量減少' : '區間變化不大';
+
+  const lsrEl = document.getElementById('ind-lsr');
+  lsrEl.textContent = result.lsrLast.toFixed(2);
+  lsrEl.className = 'ind-num ' + (result.lsrLast>1?'up':'dn');
+  const lsrFill = document.getElementById('ind-lsr-fill');
+  const longPct = (result.longAcct*100);
+  lsrFill.style.width = longPct + '%';
+  lsrFill.style.background = longPct>50 ? 'var(--up)' : 'var(--down)';
+  document.getElementById('ind-lsr-cap').textContent = `多方帳戶 ${(result.longAcct*100).toFixed(1)}% ／ 空方帳戶 ${(result.shortAcct*100).toFixed(1)}%`;
+
+  const lsrChgEl = document.getElementById('ind-lsr-chg');
+  lsrChgEl.textContent = (result.lsrChgPct>=0?'+':'') + result.lsrChgPct.toFixed(2) + '%';
+  lsrChgEl.className = 'ind-num ' + (result.lsrChgPct>2?'up':result.lsrChgPct<-2?'dn':'neu');
+  document.getElementById('ind-lsr-chg-cap').textContent = result.lsrChgPct>2 ? '轉向偏多' : result.lsrChgPct<-2 ? '轉向偏空' : '結構穩定';
+}
+
 // ============ INDICATORS (accept array of closes, numbers) ============
 function calcRSI(closes, period=14) {
   if (closes.length < period+1) period = Math.max(3, closes.length-2);
@@ -334,6 +470,7 @@ function renderDetail() {
 
   updateFavToggleBtn();
   renderChartAndIndicators();
+  renderPositioningData(currentDetailId);
   renderAIForDetail(c);
 }
 

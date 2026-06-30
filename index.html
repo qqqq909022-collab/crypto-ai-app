@@ -167,6 +167,21 @@
   .signal-banner.HOLD .verdict { color: var(--accent); }
   .signal-banner .why { font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.6; }
 
+  .oi-banner {
+    border-radius: 12px; padding: 16px; margin-bottom: 16px;
+    border: 1px solid var(--line); background: var(--bg-elev);
+  }
+  .oi-banner.BUILD_LONG { background: rgba(45,212,163,0.07); border-color: rgba(45,212,163,0.25); }
+  .oi-banner.BUILD_SHORT { background: rgba(255,92,108,0.07); border-color: rgba(255,92,108,0.25); }
+  .oi-banner.UNWIND { background: rgba(201,160,92,0.07); border-color: rgba(201,160,92,0.25); }
+  .oi-banner.FLAT { background: var(--bg-elev); }
+  .oi-banner-verdict { font-family: var(--font-display); font-size: 15px; font-weight: 700; letter-spacing: 1px; }
+  .oi-banner.BUILD_LONG .oi-banner-verdict { color: var(--up); }
+  .oi-banner.BUILD_SHORT .oi-banner-verdict { color: var(--down); }
+  .oi-banner.UNWIND .oi-banner-verdict { color: var(--accent); }
+  .oi-banner.FLAT .oi-banner-verdict { color: var(--text-dim); }
+  .oi-banner-why { font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.6; }
+
   .fav-toggle-row { display: flex; gap: 8px; margin-bottom: 18px; }
   .fav-toggle-btn {
     flex: 1; padding: 12px; border-radius: 10px; text-align: center;
@@ -332,6 +347,35 @@
       <div class="ind-name">波動率 ATR</div>
       <div class="ind-num neu" id="ind-atr">--</div>
       <div class="ind-cap" id="ind-atr-cap">--</div>
+    </div>
+  </div>
+
+  <div class="section-head"><div class="section-label">合約持倉數據</div></div>
+  <div class="oi-banner" id="oi-banner">
+    <div class="oi-banner-verdict" id="oi-verdict">— 載入中</div>
+    <div class="oi-banner-why" id="oi-why">正在讀取合約數據...</div>
+  </div>
+  <div class="ind-grid">
+    <div class="ind-card">
+      <div class="ind-name">未平倉量 OI</div>
+      <div class="ind-num neu" id="ind-oi">--</div>
+      <div class="ind-cap" id="ind-oi-cap">--</div>
+    </div>
+    <div class="ind-card">
+      <div class="ind-name">OI 變化（區間）</div>
+      <div class="ind-num neu" id="ind-oi-chg">--</div>
+      <div class="ind-cap" id="ind-oi-chg-cap">--</div>
+    </div>
+    <div class="ind-card">
+      <div class="ind-name">多空帳戶比</div>
+      <div class="ind-num neu" id="ind-lsr">--</div>
+      <div class="ind-track"><div class="ind-fill" id="ind-lsr-fill" style="width:50%;background:var(--accent)"></div></div>
+      <div class="ind-cap" id="ind-lsr-cap">--</div>
+    </div>
+    <div class="ind-card">
+      <div class="ind-name">多空比變化</div>
+      <div class="ind-num neu" id="ind-lsr-chg">--</div>
+      <div class="ind-cap" id="ind-lsr-chg-cap">--</div>
     </div>
   </div>
 
