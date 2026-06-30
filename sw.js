@@ -1,4 +1,4 @@
-const CACHE = 'crypto-ai-v1';
+const CACHE = 'crypto-ai-v2';
 const ASSETS = ['./index.html', './app.js', './manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
@@ -18,14 +18,12 @@ self.addEventListener('fetch', (e) => {
   // Never cache external API calls — always go to network for those
   if (url.origin !== self.location.origin) return;
 
+  // Network-first for our own files: always try fresh, fall back to cache only if offline
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return res;
-      }).catch(() => cached);
-    })
+    fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return res;
+    }).catch(() => caches.match(e.request))
   );
 });
