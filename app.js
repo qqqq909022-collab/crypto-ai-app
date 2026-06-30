@@ -82,6 +82,17 @@ let holdings = loadState('cai_holdings', []); // [{id, amount}]
 let alerts = loadState('cai_alerts', []); // [{id, coinId, cond, price, fired}]
 
 // ============ UTIL ============
+// ============ COIN ICON (jsDelivr-hosted Binance icon set, falls back to text initials on error) ============
+function coinIconUrl(sym) {
+  return `https://cdn.jsdelivr.net/gh/vadimmalykhin/binance-icons/crypto/${sym.toLowerCase()}.svg`;
+}
+function coinIconHTML(sym, extraClass='') {
+  const fallback = sym.slice(0,4);
+  return `<div class="coin-glyph ${extraClass}" data-fallback="${fallback}">` +
+    `<img src="${coinIconUrl(sym)}" alt="${sym}" loading="lazy" onerror="this.parentElement.innerHTML=this.parentElement.dataset.fallback">` +
+    `</div>`;
+}
+
 function fmtPrice(p) {
   if (p == null) return '--';
   if (p >= 1000) return '$' + p.toLocaleString('en-US',{maximumFractionDigits:0});
@@ -136,7 +147,7 @@ function coinRowHTML(c, showStar=true) {
   const sig = computeSignal(c);
   const isFav = favorites.includes(c.id);
   return `<div class="coin-row" onclick="openDetail('${c.id}')">
-    <div class="coin-glyph">${c.sym.slice(0,4)}</div>
+    ${coinIconHTML(c.sym)}
     <div class="coin-info">
       <div class="coin-sym">${c.sym} <span class="sig-tag ${sig}">${signalLabel(sig)}</span></div>
       <div class="coin-name">${c.name}</div>
@@ -631,7 +642,7 @@ function renderPortfolio() {
     total += val;
     weightedCh += val * c.ch24;
     return `<div class="pf-row">
-      <div class="coin-glyph">${c.sym.slice(0,4)}</div>
+      ${coinIconHTML(c.sym)}
       <div class="pf-row-info">
         <div class="coin-sym">${c.sym}</div>
         <div class="pf-row-amt">${h.amount} ${c.sym}</div>
@@ -685,7 +696,7 @@ function renderAlerts() {
     const c = getCoin(a.coinId);
     if (!c) return '';
     return `<div class="pf-row">
-      <div class="coin-glyph">${c.sym.slice(0,4)}</div>
+      ${coinIconHTML(c.sym)}
       <div class="pf-row-info">
         <div class="coin-sym">${c.sym}</div>
         <div class="pf-row-amt">${a.cond==='above'?'高於':'低於'} ${fmtPrice(a.price)}</div>

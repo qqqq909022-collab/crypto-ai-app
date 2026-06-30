@@ -109,8 +109,10 @@
     background: var(--bg-elev2); border: 1px solid var(--line);
     display: flex; align-items: center; justify-content: center;
     font-family: var(--font-display); font-size: 10px; font-weight: 600; color: var(--accent);
-    flex-shrink: 0;
+    flex-shrink: 0; overflow: hidden;
   }
+  .coin-glyph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .coin-glyph.lg { width: 56px; height: 56px; border-radius: 16px; font-size: 14px; }
   .coin-info { flex: 1; min-width: 0; }
   .coin-sym { font-size: 14px; font-weight: 600; color: var(--text); }
   .coin-name { font-size: 11px; color: var(--text-faint); }
