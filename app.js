@@ -161,7 +161,6 @@ function switchScreen(name) {
 
 function openDetail(id) {
   currentDetailId = id;
-  switchScreen('detail-internal'); // placeholder, handled below
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-detail').classList.add('active');
   renderDetail();
