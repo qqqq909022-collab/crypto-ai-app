@@ -381,14 +381,17 @@ async function renderChartAndIndicators() {
   document.getElementById('sig-why').textContent = signalReason(c) + ` RSI ${rsi.toFixed(0)}，均線${bullish?'偏多':'偏空'}排列，波動率${atr.toFixed(1)}%。`;
 }
 
-document.getElementById('tf-row').addEventListener('click', (e) => {
-  const pill = e.target.closest('.tf-pill');
-  if (!pill) return;
-  document.querySelectorAll('.tf-pill').forEach(p=>p.classList.remove('active'));
-  pill.classList.add('active');
-  currentTF = parseInt(pill.dataset.d);
-  renderChartAndIndicators();
-});
+const tfRowEl = document.getElementById('tf-row');
+if (tfRowEl) {
+  tfRowEl.addEventListener('click', (e) => {
+    const pill = e.target.closest('.tf-pill');
+    if (!pill) return;
+    document.querySelectorAll('.tf-pill').forEach(p=>p.classList.remove('active'));
+    pill.classList.add('active');
+    currentTF = parseInt(pill.dataset.d);
+    renderChartAndIndicators();
+  });
+}
 
 function renderAIForDetail(c) {
   const sig = computeSignal(c);
@@ -614,18 +617,27 @@ if ('serviceWorker' in navigator) {
 }
 
 // ============ INIT ============
-try {
-  renderTicker();
-  renderMarketScreen();
-  renderDetail();
-} catch(e) { console.error('init render error', e); }
-document.getElementById('status-text').textContent = '離線快照數據（2026/6/29）';
-tryFetchLive();
+function initApp() {
+  try {
+    renderTicker();
+    renderMarketScreen();
+    renderDetail();
+  } catch(e) { console.error('init render error', e); }
+  const statusTextEl = document.getElementById('status-text');
+  if (statusTextEl) statusTextEl.textContent = '離線快照數據（2026/6/29）';
+  tryFetchLive();
+}
 
-// safety net: ensure market list is painted even if something raced above
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
+// safety net: ensure market list shows real coin rows, not just the static placeholder
 setTimeout(() => {
   const grid = document.getElementById('all-coins-list');
-  if (grid && !grid.innerHTML.trim()) {
-    try { renderMarketScreen(); } catch(e) {}
+  if (grid && !grid.querySelector('.coin-row')) {
+    try { renderTicker(); renderMarketScreen(); } catch(e) {}
   }
-}, 800);
+}, 1000);
