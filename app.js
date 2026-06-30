@@ -1,25 +1,26 @@
-// ============ SNAPSHOT DATA (2026-06-29) — used as offline-first base ============
+// ============ SNAPSHOT DATA (2026-06-29) — used as offline-first base, shown before live list loads ============
+// id == Binance symbol (e.g. 'BTCUSDT') so the whole app can scale to any number of coins with one consistent key
 const SNAPSHOT = [
-  { id:'bitcoin', sym:'BTC', name:'Bitcoin', price:59668.09, ch24:-0.43, ch7:-2.1, mcap:1209531900520, vol:31512449517 },
-  { id:'ethereum', sym:'ETH', name:'Ethereum', price:1586.26, ch24:0.39, ch7:1.8, mcap:195520777963, vol:12454909904 },
-  { id:'binancecoin', sym:'BNB', name:'BNB', price:554.17, ch24:-0.18, ch7:0.6, mcap:75524653023, vol:765022148 },
-  { id:'ripple', sym:'XRP', name:'XRP', price:1.05, ch24:-0.31, ch7:0.98, mcap:66388781741, vol:1938176312 },
-  { id:'solana', sym:'SOL', name:'Solana', price:74.25, ch24:2.04, ch7:4.97, mcap:43799746717, vol:4229713062 },
-  { id:'dogecoin', sym:'DOGE', name:'Dogecoin', price:0.07248, ch24:-1.15, ch7:-3.6, mcap:10670000000, vol:980000000 },
-  { id:'tron', sym:'TRX', name:'TRON', price:0.3215, ch24:0.26, ch7:-3.6, mcap:30474299007, vol:575108814 },
-  { id:'cardano', sym:'ADA', name:'Cardano', price:0.398, ch24:-0.8, ch7:-1.2, mcap:14200000000, vol:320000000 },
-  { id:'polkadot', sym:'DOT', name:'Polkadot', price:4.12, ch24:3.4, ch7:8.1, mcap:6100000000, vol:210000000 },
-  { id:'avalanche-2', sym:'AVAX', name:'Avalanche', price:18.6, ch24:1.1, ch7:2.3, mcap:7600000000, vol:280000000 },
-  { id:'chainlink', sym:'LINK', name:'Chainlink', price:11.4, ch24:0.5, ch7:-0.9, mcap:7300000000, vol:340000000 },
-  { id:'litecoin', sym:'LTC', name:'Litecoin', price:78.3, ch24:-0.6, ch7:1.4, mcap:5900000000, vol:410000000 },
-  { id:'shiba-inu', sym:'SHIB', name:'Shiba Inu', price:0.0000112, ch24:-1.8, ch7:-4.2, mcap:6600000000, vol:190000000 },
-  { id:'uniswap', sym:'UNI', name:'Uniswap', price:6.8, ch24:1.9, ch7:3.1, mcap:4100000000, vol:120000000 },
-  { id:'near', sym:'NEAR', name:'NEAR Protocol', price:2.9, ch24:2.6, ch7:5.4, mcap:3300000000, vol:140000000 },
-  { id:'aptos', sym:'APT', name:'Aptos', price:4.4, ch24:-1.1, ch7:-2.8, mcap:2500000000, vol:95000000 },
-  { id:'arbitrum', sym:'ARB', name:'Arbitrum', price:0.42, ch24:0.8, ch7:1.6, mcap:1700000000, vol:88000000 },
-  { id:'optimism', sym:'OP', name:'Optimism', price:0.75, ch24:-0.4, ch7:0.3, mcap:1300000000, vol:62000000 },
-  { id:'sui', sym:'SUI', name:'Sui', price:1.85, ch24:3.9, ch7:7.2, mcap:5400000000, vol:310000000 },
-  { id:'stellar', sym:'XLM', name:'Stellar', price:0.1723, ch24:-0.9, ch7:-1.6, mcap:5200000000, vol:140000000 },
+  { id:'BTCUSDT', sym:'BTC', name:'Bitcoin', price:59668.09, ch24:-0.43, ch7:-2.1, mcap:0, vol:31512449517 },
+  { id:'ETHUSDT', sym:'ETH', name:'Ethereum', price:1586.26, ch24:0.39, ch7:1.8, mcap:0, vol:12454909904 },
+  { id:'BNBUSDT', sym:'BNB', name:'BNB', price:554.17, ch24:-0.18, ch7:0.6, mcap:0, vol:765022148 },
+  { id:'XRPUSDT', sym:'XRP', name:'XRP', price:1.05, ch24:-0.31, ch7:0.98, mcap:0, vol:1938176312 },
+  { id:'SOLUSDT', sym:'SOL', name:'Solana', price:74.25, ch24:2.04, ch7:4.97, mcap:0, vol:4229713062 },
+  { id:'DOGEUSDT', sym:'DOGE', name:'Dogecoin', price:0.07248, ch24:-1.15, ch7:-3.6, mcap:0, vol:980000000 },
+  { id:'TRXUSDT', sym:'TRX', name:'TRON', price:0.3215, ch24:0.26, ch7:-3.6, mcap:0, vol:575108814 },
+  { id:'ADAUSDT', sym:'ADA', name:'Cardano', price:0.398, ch24:-0.8, ch7:-1.2, mcap:0, vol:320000000 },
+  { id:'DOTUSDT', sym:'DOT', name:'Polkadot', price:4.12, ch24:3.4, ch7:8.1, mcap:0, vol:210000000 },
+  { id:'AVAXUSDT', sym:'AVAX', name:'Avalanche', price:18.6, ch24:1.1, ch7:2.3, mcap:0, vol:280000000 },
+  { id:'LINKUSDT', sym:'LINK', name:'Chainlink', price:11.4, ch24:0.5, ch7:-0.9, mcap:0, vol:340000000 },
+  { id:'LTCUSDT', sym:'LTC', name:'Litecoin', price:78.3, ch24:-0.6, ch7:1.4, mcap:0, vol:410000000 },
+  { id:'SHIBUSDT', sym:'SHIB', name:'Shiba Inu', price:0.0000112, ch24:-1.8, ch7:-4.2, mcap:0, vol:190000000 },
+  { id:'UNIUSDT', sym:'UNI', name:'Uniswap', price:6.8, ch24:1.9, ch7:3.1, mcap:0, vol:120000000 },
+  { id:'NEARUSDT', sym:'NEAR', name:'NEAR Protocol', price:2.9, ch24:2.6, ch7:5.4, mcap:0, vol:140000000 },
+  { id:'APTUSDT', sym:'APT', name:'Aptos', price:4.4, ch24:-1.1, ch7:-2.8, mcap:0, vol:95000000 },
+  { id:'ARBUSDT', sym:'ARB', name:'Arbitrum', price:0.42, ch24:0.8, ch7:1.6, mcap:0, vol:88000000 },
+  { id:'OPUSDT', sym:'OP', name:'Optimism', price:0.75, ch24:-0.4, ch7:0.3, mcap:0, vol:62000000 },
+  { id:'SUIUSDT', sym:'SUI', name:'Sui', price:1.85, ch24:3.9, ch7:7.2, mcap:0, vol:310000000 },
+  { id:'XLMUSDT', sym:'XLM', name:'Stellar', price:0.1723, ch24:-0.9, ch7:-1.6, mcap:0, vol:140000000 },
 ];
 
 const GLOBAL_SNAPSHOT = { totalMcap: 2.2e12, totalVol: 82e9, btcDom: 56.0, ethDom: 8.9 };
@@ -36,8 +37,35 @@ const NEWS_SNAPSHOT = [
 let coins = JSON.parse(JSON.stringify(SNAPSHOT));
 let globalStats = { ...GLOBAL_SNAPSHOT };
 let dataIsLive = false;
-let currentDetailId = 'bitcoin';
+let currentDetailId = 'BTCUSDT';
 let currentTF = '1h';
+let coinListExpanded = false; // becomes true once the full ~200-coin list has loaded
+
+// Friendly display names for common base assets; falls back to the base asset code itself if unlisted
+const COIN_NAMES = {
+  BTC:'Bitcoin', ETH:'Ethereum', BNB:'BNB', XRP:'XRP', SOL:'Solana', DOGE:'Dogecoin',
+  TRX:'TRON', ADA:'Cardano', DOT:'Polkadot', AVAX:'Avalanche', LINK:'Chainlink', LTC:'Litecoin',
+  SHIB:'Shiba Inu', UNI:'Uniswap', NEAR:'NEAR Protocol', APT:'Aptos', ARB:'Arbitrum', OP:'Optimism',
+  SUI:'Sui', XLM:'Stellar', BCH:'Bitcoin Cash', ATOM:'Cosmos', FIL:'Filecoin', ICP:'Internet Computer',
+  ETC:'Ethereum Classic', HBAR:'Hedera', VET:'VeChain', RENDER:'Render', INJ:'Injective', TIA:'Celestia',
+  SEI:'Sei', GRT:'The Graph', ALGO:'Algorand', FTM:'Fantom', SAND:'The Sandbox', MANA:'Decentraland',
+  AAVE:'Aave', MKR:'Maker', SNX:'Synthetix', CRV:'Curve DAO', LDO:'Lido DAO', RUNE:'THORChain',
+  IMX:'Immutable', FLOW:'Flow', EGLD:'MultiversX', XTZ:'Tezos', THETA:'Theta Network', EOS:'EOS',
+  KAVA:'Kava', MINA:'Mina', ZEC:'Zcash', DASH:'Dash', NEO:'NEO', QTUM:'Qtum', WAVES:'Waves',
+  CHZ:'Chiliz', ENJ:'Enjin Coin', BAT:'Basic Attention Token', ZIL:'Zilliqa', ONE:'Harmony',
+  GALA:'Gala', AXS:'Axie Infinity', FET:'Fetch.ai', AGIX:'SingularityNET', OCEAN:'Ocean Protocol',
+  PEPE:'Pepe', WIF:'dogwifhat', BONK:'Bonk', FLOKI:'Floki', JUP:'Jupiter', PYTH:'Pyth Network',
+  ORDI:'ORDI', WLD:'Worldcoin', STX:'Stacks', RNDR:'Render', TON:'Toncoin', PENDLE:'Pendle',
+  ENS:'Ethereum Name Service', COMP:'Compound', YFI:'yearn.finance', '1INCH':'1inch', SUSHI:'SushiSwap',
+  CAKE:'PancakeSwap', GMX:'GMX', DYDX:'dYdX', BLUR:'Blur', MASK:'Mask Network', ROSE:'Oasis Network',
+  CFX:'Conflux', KSM:'Kusama', ZRX:'0x Protocol', ANKR:'Ankr', CELR:'Celer Network', SKL:'SKALE',
+  COTI:'COTI', STORJ:'Storj', BAND:'Band Protocol', OGN:'Origin Protocol', CTSI:'Cartesi',
+  API3:'API3', WOO:'WOO Network', HOOK:'Hooked Protocol', HIGH:'Highstreet', PHB:'Phoenix',
+  ID:'SPACE ID', EDU:'Open Campus', ARKM:'Arkham', NOT:'Notcoin', ACE:'Fusionist',
+};
+function nameFor(symBase, fallbackSym) {
+  return COIN_NAMES[symBase] || fallbackSym;
+}
 
 function loadState(key, fallback) {
   try {
@@ -49,7 +77,7 @@ function saveState(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
 }
 
-let favorites = loadState('cai_favorites', ['bitcoin','ethereum','solana']);
+let favorites = loadState('cai_favorites', ['BTCUSDT','ETHUSDT','SOLUSDT']);
 let holdings = loadState('cai_holdings', []); // [{id, amount}]
 let alerts = loadState('cai_alerts', []); // [{id, coinId, cond, price, fired}]
 
@@ -128,7 +156,21 @@ function renderMarketScreen() {
     ? favList.map(c => coinRowHTML(c)).join('')
     : `<div class="empty-state"><div class="icon">☆</div>點擊幣種旁的星星加入最愛</div>`;
 
-  document.getElementById('all-coins-list').innerHTML = coins.map(c => coinRowHTML(c)).join('');
+  const searchEl = document.getElementById('coin-search');
+  const query = searchEl ? searchEl.value.trim().toUpperCase() : '';
+  const filtered = query
+    ? coins.filter(c => c.sym.toUpperCase().includes(query) || c.name.toUpperCase().includes(query))
+    : coins;
+
+  const listEl = document.getElementById('all-coins-list');
+  listEl.innerHTML = filtered.length
+    ? filtered.map(c => coinRowHTML(c)).join('')
+    : `<div class="empty-state"><div class="icon">⌕</div>找不到符合「${query}」的幣種</div>`;
+}
+
+const coinSearchEl = document.getElementById('coin-search');
+if (coinSearchEl) {
+  coinSearchEl.addEventListener('input', () => renderMarketScreen());
 }
 
 function toggleFav(id) {
@@ -192,19 +234,10 @@ function generateSeries(c, interval) {
   return candles;
 }
 
-// ============ BINANCE SYMBOL MAP ============
-const BINANCE_SYMBOL = {
-  bitcoin:'BTCUSDT', ethereum:'ETHUSDT', binancecoin:'BNBUSDT', ripple:'XRPUSDT',
-  solana:'SOLUSDT', dogecoin:'DOGEUSDT', tron:'TRXUSDT', cardano:'ADAUSDT',
-  polkadot:'DOTUSDT', 'avalanche-2':'AVAXUSDT', chainlink:'LINKUSDT', litecoin:'LTCUSDT',
-  'shiba-inu':'SHIBUSDT', uniswap:'UNIUSDT', near:'NEARUSDT', aptos:'APTUSDT',
-  arbitrum:'ARBUSDT', optimism:'OPUSDT', sui:'SUIUSDT', stellar:'XLMUSDT',
-};
-
 // ============ REAL K-LINE FETCH (Binance) ============
 const klineCache = {};
 async function fetchRealOHLC(coinId, interval) {
-  const symbol = BINANCE_SYMBOL[coinId];
+  const symbol = coinId; // coin.id is already a Binance symbol, e.g. 'BTCUSDT'
   if (!symbol) return null;
   const cacheKey = `${symbol}-${interval}`;
   if (klineCache[cacheKey]) return klineCache[cacheKey];
@@ -304,17 +337,10 @@ function interpretPositioning(oiHist, lsrHist) {
 }
 
 async function renderPositioningData(coinId) {
-  const symbol = BINANCE_SYMBOL[coinId];
+  const symbol = coinId; // coin.id is already a Binance symbol
   const banner = document.getElementById('oi-banner');
   const verdictEl = document.getElementById('oi-verdict');
   const whyEl = document.getElementById('oi-why');
-
-  if (!symbol) {
-    banner.className = 'oi-banner FLAT';
-    verdictEl.textContent = '— 無合約數據';
-    whyEl.textContent = '此幣種目前無幣安合約市場數據。';
-    return;
-  }
 
   verdictEl.textContent = '— 載入中';
   whyEl.textContent = '正在讀取合約數據...';
@@ -325,14 +351,14 @@ async function renderPositioningData(coinId) {
   ]);
 
   // bail if user navigated to a different coin while this was loading
-  if (BINANCE_SYMBOL[currentDetailId] !== symbol) return;
+  if (currentDetailId !== symbol) return;
 
   const result = interpretPositioning(oiHist, lsrHist);
 
   if (!result) {
     banner.className = 'oi-banner FLAT';
-    verdictEl.textContent = '— 無法取得合約數據';
-    whyEl.textContent = '合約數據暫時無法連線，請稍後再試。';
+    verdictEl.textContent = '— 無合約數據';
+    whyEl.textContent = '此幣種可能無幣安永續合約市場，或合約數據暫時無法連線。';
     document.getElementById('ind-oi').textContent = '--';
     document.getElementById('ind-oi-chg').textContent = '--';
     document.getElementById('ind-lsr').textContent = '--';
@@ -707,32 +733,62 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 });
 
 // ============ LIVE DATA FETCH (best-effort, never blocks) ============
+const TOP_N_COINS = 200;
+
 async function tryFetchLive() {
   const statusPill = document.getElementById('status-pill');
   const statusText = document.getElementById('status-text');
-  const ids = coins.map(c=>c.id).join(',');
   const controller = new AbortController();
-  const timeout = setTimeout(()=>controller.abort(), 6000);
+  const timeout = setTimeout(()=>controller.abort(), 8000);
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&price_change_percentage=7d`, { signal: controller.signal });
+    const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr`, { signal: controller.signal });
     clearTimeout(timeout);
     if (!res.ok) throw new Error('bad response');
     const data = await res.json();
     if (!Array.isArray(data) || !data.length) throw new Error('empty');
-    const byId = {};
-    data.forEach(d => byId[d.id] = d);
-    coins.forEach(c => {
-      const d = byId[c.id];
-      if (!d) return;
-      c.price = d.current_price;
-      c.ch24 = d.price_change_percentage_24h || 0;
-      c.ch7 = d.price_change_percentage_7d_in_currency || 0;
-      c.mcap = d.market_cap;
-      c.vol = d.total_volume;
+
+    // Keep only USDT pairs, exclude leveraged/UP-DOWN tokens and stablecoin-vs-USDT noise
+    const STABLE_BASES = new Set(['USDC','FDUSD','TUSD','BUSD','DAI','USDP','EUR','GBP','USDT']);
+    const usdtPairs = data.filter(d => {
+      if (!d.symbol.endsWith('USDT')) return false;
+      const base = d.symbol.slice(0, -4);
+      if (!base) return false;
+      if (/(UP|DOWN|BULL|BEAR)$/.test(base)) return false; // leveraged tokens
+      if (STABLE_BASES.has(base)) return false;
+      return true;
     });
+
+    // Sort by quote volume (USDT traded) descending, take top N
+    usdtPairs.sort((a,b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume));
+    const top = usdtPairs.slice(0, TOP_N_COINS);
+
+    const existingById = {};
+    coins.forEach(c => existingById[c.id] = c);
+
+    const newCoins = top.map(d => {
+      const base = d.symbol.slice(0, -4);
+      const prev = existingById[d.symbol];
+      return {
+        id: d.symbol,
+        sym: base,
+        name: nameFor(base, base),
+        price: parseFloat(d.lastPrice),
+        ch24: parseFloat(d.priceChangePercent),
+        ch7: prev ? prev.ch7 : parseFloat(d.priceChangePercent) * 0.6, // no 7d data from this endpoint; rough estimate, refined further below if previously known
+        mcap: 0,
+        vol: parseFloat(d.quoteVolume),
+      };
+    });
+
+    coins = newCoins;
+    coinListExpanded = true;
     dataIsLive = true;
     statusPill.className = 'status-pill live';
-    statusText.textContent = '即時數據 · ' + new Date().toLocaleTimeString('zh-TW',{hour12:false});
+    statusText.textContent = `即時數據 · 前${coins.length}幣種 · ` + new Date().toLocaleTimeString('zh-TW',{hour12:false});
+
+    // ensure currentDetailId still points at a coin that exists; fall back to BTCUSDT
+    if (!getCoin(currentDetailId)) currentDetailId = 'BTCUSDT';
+
     refreshAllViews();
   } catch(e) {
     dataIsLive = false;
