@@ -588,8 +588,11 @@ function manualRefresh() { toast('正在嘗試更新...'); tryFetchLive(); }
 function refreshAllViews() {
   renderTicker();
   renderMarketScreen();
-  if (document.getElementById('screen-detail').classList.contains('active')) renderDetail();
-  if (document.getElementById('screen-portfolio').classList.contains('active')) renderPortfolio();
+  const activeScreen = document.querySelector('.screen.active');
+  const activeId = activeScreen ? activeScreen.id : '';
+  if (activeId === 'screen-detail') renderDetail();
+  if (activeId === 'screen-portfolio') renderPortfolio();
+  if (activeId === 'screen-alerts') { renderAlerts(); renderNews(); }
   checkAlerts();
 }
 
@@ -611,8 +614,18 @@ if ('serviceWorker' in navigator) {
 }
 
 // ============ INIT ============
-renderTicker();
-renderMarketScreen();
-renderDetail();
+try {
+  renderTicker();
+  renderMarketScreen();
+  renderDetail();
+} catch(e) { console.error('init render error', e); }
 document.getElementById('status-text').textContent = '離線快照數據（2026/6/29）';
 tryFetchLive();
+
+// safety net: ensure market list is painted even if something raced above
+setTimeout(() => {
+  const grid = document.getElementById('all-coins-list');
+  if (grid && !grid.innerHTML.trim()) {
+    try { renderMarketScreen(); } catch(e) {}
+  }
+}, 800);
