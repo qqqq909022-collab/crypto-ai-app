@@ -167,27 +167,52 @@ function openDetail(id) {
   renderDetail();
 }
 
-// ============ SIMPLE PSEUDO-CANDLE GENERATION (offline, deterministic from price) ============
+// ============ FALLBACK PSEUDO-CANDLE GENERATION (offline, deterministic from price) ============
 function generateSeries(c, days) {
   const points = days === 1 ? 24 : days === 7 ? 42 : days === 30 ? 60 : 90;
   const totalChange = days === 1 ? c.ch24 : days === 7 ? c.ch7 : days === 30 ? c.ch7*1.8 : c.ch7*3.2;
   const startPrice = c.price / (1 + totalChange/100);
   let seed = c.sym.charCodeAt(0) * 7 + c.sym.charCodeAt(1) * 13;
   function rand() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
-  const series = [];
+  const candles = [];
   let p = startPrice;
   for (let i=0;i<points;i++) {
     const progress = i/(points-1);
     const target = startPrice + (c.price - startPrice) * progress;
     const noise = (rand()-0.5) * Math.abs(c.price)*0.015;
+    const open = p;
     p = target + noise;
-    series.push(p);
+    const close = p;
+    const high = Math.max(open,close) + Math.abs(rand())*Math.abs(c.price)*0.004;
+    const low = Math.min(open,close) - Math.abs(rand())*Math.abs(c.price)*0.004;
+    candles.push({ open, high, low, close });
   }
-  series[series.length-1] = c.price;
-  return series;
+  candles[candles.length-1].close = c.price;
+  return candles;
 }
 
-// ============ INDICATORS ============
+// ============ REAL OHLC FETCH (CoinGecko) ============
+const ohlcCache = {};
+async function fetchRealOHLC(coinId, days) {
+  const cacheKey = `${coinId}-${days}`;
+  if (ohlcCache[cacheKey]) return ohlcCache[cacheKey];
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 6000);
+  try {
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=${days}`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error('bad response');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length < 3) throw new Error('insufficient data');
+    const candles = data.map(d => ({ time: d[0], open: d[1], high: d[2], low: d[3], close: d[4] }));
+    ohlcCache[cacheKey] = candles;
+    return candles;
+  } catch(e) {
+    return null;
+  }
+}
+
+// ============ INDICATORS (accept array of closes, numbers) ============
 function calcRSI(closes, period=14) {
   if (closes.length < period+1) period = Math.max(3, closes.length-2);
   let gains=0, losses=0;
@@ -232,45 +257,50 @@ function calcATR(closes) {
   return (sum/(closes.length-1))/closes[closes.length-1]*100;
 }
 
-// ============ MINI CHART (canvas) ============
-function drawChart(series, up) {
+// ============ REAL CANDLESTICK CHART (canvas) ============
+function drawCandleChart(candles) {
   const canvas = document.getElementById('mini-chart');
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
   canvas.width = rect.width * dpr;
-  canvas.height = 160 * dpr;
+  canvas.height = 200 * dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
-  const w = rect.width, h = 160;
+  const w = rect.width, h = 200;
   ctx.clearRect(0,0,w,h);
 
-  const min = Math.min(...series), max = Math.max(...series);
+  const highs = candles.map(c=>c.high), lows = candles.map(c=>c.low);
+  const min = Math.min(...lows), max = Math.max(...highs);
   const range = (max-min) || 1;
-  const pad = 8;
+  const padTop = 10, padBottom = 10;
+  const plotH = h - padTop - padBottom;
 
-  const color = up ? '#2dd4a3' : '#ff5c6c';
+  const n = candles.length;
+  const slotW = w / n;
+  const bodyW = Math.max(1.5, slotW * 0.62);
 
-  // gradient fill
-  const grad = ctx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0, up ? 'rgba(45,212,163,0.25)' : 'rgba(255,92,108,0.25)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  const yFor = (price) => padTop + (1 - (price-min)/range) * plotH;
 
-  ctx.beginPath();
-  series.forEach((v,i) => {
-    const x = (i/(series.length-1)) * w;
-    const y = pad + (1 - (v-min)/range) * (h - pad*2);
-    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  candles.forEach((c, i) => {
+    const xCenter = slotW * i + slotW/2;
+    const up = c.close >= c.open;
+    const color = up ? '#2dd4a3' : '#ff5c6c';
+
+    // wick
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(xCenter, yFor(c.high));
+    ctx.lineTo(xCenter, yFor(c.low));
+    ctx.stroke();
+
+    // body
+    const yOpen = yFor(c.open), yClose = yFor(c.close);
+    const bodyTop = Math.min(yOpen, yClose);
+    const bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
+    ctx.fillStyle = color;
+    ctx.fillRect(xCenter - bodyW/2, bodyTop, bodyW, bodyHeight);
   });
-  ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
-  ctx.fillStyle = grad; ctx.fill();
-
-  ctx.beginPath();
-  series.forEach((v,i) => {
-    const x = (i/(series.length-1)) * w;
-    const y = pad + (1 - (v-min)/range) * (h - pad*2);
-    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-  });
-  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin='round'; ctx.stroke();
 }
 
 // ============ DETAIL SCREEN ============
@@ -288,12 +318,33 @@ function renderDetail() {
   renderAIForDetail(c);
 }
 
-function renderChartAndIndicators() {
+async function renderChartAndIndicators() {
   const c = getCoin(currentDetailId);
-  const series = generateSeries(c, currentTF);
-  drawChart(series, c.ch24 >= 0);
+  const tfMap = { 1:1, 7:7, 30:30, 90:90 };
+  const days = tfMap[currentTF] || 7;
 
-  const rsi = calcRSI(series);
+  // show loading state briefly
+  const srcTag = document.getElementById('chart-src');
+  if (srcTag) srcTag.textContent = '載入中...';
+
+  let candles = await fetchRealOHLC(c.id, days);
+  let isReal = true;
+  if (!candles || candles.length < 5) {
+    candles = generateSeries(c, currentTF);
+    isReal = false;
+  }
+
+  // if user navigated away/changed coin while fetch was in flight, abort render
+  if (getCoin(currentDetailId).id !== c.id) return;
+
+  drawCandleChart(candles);
+  if (srcTag) srcTag.textContent = isReal ? '真實K線數據' : '模擬走勢（離線）';
+
+  const closes = candles.map(k => k.close);
+  const highs = candles.map(k => k.high);
+  const lows = candles.map(k => k.low);
+
+  const rsi = calcRSI(closes);
   const rsiEl = document.getElementById('ind-rsi'), rsiFill = document.getElementById('ind-rsi-fill'), rsiCap = document.getElementById('ind-rsi-cap');
   rsiEl.textContent = rsi.toFixed(1);
   rsiFill.style.width = rsi+'%';
@@ -301,7 +352,7 @@ function renderChartAndIndicators() {
   else if (rsi<30) { rsiEl.className='ind-num up'; rsiFill.style.background='var(--up)'; rsiCap.textContent='超賣區間'; }
   else { rsiEl.className='ind-num neu'; rsiFill.style.background='var(--accent)'; rsiCap.textContent='中性區間'; }
 
-  const macd = calcMACD(series);
+  const macd = calcMACD(closes);
   const macdEl = document.getElementById('ind-macd'), macdCap = document.getElementById('ind-macd-cap');
   if (macd) {
     macdEl.textContent = macd.hist>0?'正向':'負向';
@@ -309,14 +360,14 @@ function renderChartAndIndicators() {
     macdCap.textContent = macd.hist>0 ? '柱狀圖轉正，動能轉強' : '柱狀圖轉負，動能偏弱';
   }
 
-  const ma7 = calcMA(series,7), maLong = calcMA(series, Math.min(25,series.length));
+  const ma7 = calcMA(closes,7), maLong = calcMA(closes, Math.min(25,closes.length));
   const maEl = document.getElementById('ind-ma'), maCap = document.getElementById('ind-ma-cap');
   const bullish = ma7 > maLong;
   maEl.textContent = bullish ? '偏多' : '偏空';
   maEl.className = 'ind-num ' + (bullish?'up':'dn');
   maCap.textContent = bullish ? '短均線在長均線之上' : '短均線在長均線之下';
 
-  const atr = calcATR(series);
+  const atr = calcATR(closes);
   const atrEl = document.getElementById('ind-atr'), atrCap = document.getElementById('ind-atr-cap');
   atrEl.textContent = atr.toFixed(2)+'%';
   atrEl.className = 'ind-num ' + (atr>4?'dn':atr>1.5?'neu':'up');
